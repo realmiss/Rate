@@ -12,13 +12,18 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+
+import java.io.*;
+import java.net.*;
+
+import org.jsoup.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 public class RateActivity extends AppCompatActivity implements View.OnClickListener, Runnable{
     private final String TAG = "Rate";
@@ -44,9 +49,9 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
 
         SharedPreferences sharedPreferences = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
         PreferenceManager.getDefaultSharedPreferences(this);
-        dollarRate = sharedPreferences.getFloat("dollar_rate",0.0f);
-        euroRate = sharedPreferences.getFloat("euro_rate",0.0f);
-        wonRate = sharedPreferences.getFloat("won_rate",0.0f);
+        dollarRate = sharedPreferences.getFloat("dollar_rate",0.1f);
+        euroRate = sharedPreferences.getFloat("euro_rate",0.1f);
+        wonRate = sharedPreferences.getFloat("won_rate",0.1f);
 
         Log.i(TAG, "onCreate: sp dollarRate=" + dollarRate);
         Log.i(TAG, "onCreate: sp euroRate=" + euroRate);
@@ -58,14 +63,33 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
         handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                if (msg.what == 5) {
-                    String str = (String) msg.obj;
-                    Log.i(TAG, "handleMessage:getMessage msg = " + str);
-                    show.setText(str);
+                if(msg.what==5){
+                    Bundle bdl = (Bundle) msg.obj;
+                    dollarRate = bdl.getFloat("dollar-rate");
+                    euroRate = bdl.getFloat("euro-rate");
+                    wonRate = bdl.getFloat("won-rate");
+                    Log.i(TAG, "handleMessage: dollarRate:" + dollarRate);
+                    Log.i(TAG, "handleMessage: euroRate:" + euroRate);
+                    Log.i(TAG, "handleMessage: wonRate:" + wonRate);
+                    Toast.makeText(RateActivity.this, "汇率已更新", Toast.LENGTH_SHORT).show();
+
+                    SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+                    Date curDate = new Date(System.currentTimeMillis());
+                    String todayStr = sf.format(curDate);
+
+                    SharedPreferences sp = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sp.edit();
+                    editor.putFloat("dollar_rate",dollarRate);
+                    editor.putFloat("euro_rate",euroRate);
+                    editor.putFloat("won_rate",wonRate);
+                    editor.putString("update_date",todayStr);
+                    editor.commit();
+
                 }
                 super.handleMessage(msg);
             }
         };
+
     }
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.rate,menu);
@@ -129,33 +153,40 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
         super.onActivityResult(requestCode, resultCode, data);
     }
     public void run() {
-        Log.i(TAG, "run: run()......");
-        for(int i=1;i<3;i++){
-            Log.i(TAG, "run: i=" + i);
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
 
-        Message msg = handler.obtainMessage(5);
-        msg.obj = "Hello from run()";
-        handler.sendMessage(msg);
-
-        URL url = null;
+        Bundle bun = new Bundle();
+        Document doc = null;
         try {
-            url = new URL("http://www.usd-cny.com/icbc.htm");
-            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-            InputStream in = http.getInputStream();
-            String html = inputStream2String(in);
-            Log.i(TAG, "run: html=" + html);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+            String url = "https://www.usd-cny.com/bankofchina.htm";
+            doc = Jsoup.connect(url).get();
+            Elements tables = doc.getElementsByTag("table");
+            Element table1 = tables.get(0);
+            Elements tds = table1.getElementsByTag("td");
+            for(int i=0;i<tds.size();i+=6){
+                Element td1 = tds.get(i);
+                Element td2 = tds.get(i+5);
+                String str1 = td1.text();
+                String val = td2.text();
+                Log.i(TAG, "run: " + str1 + "==>" + val);
+
+                float v = 100f / Float.parseFloat(val);
+                if("美元".equals(str1)){
+                    bun.putFloat("dollar-rate", v);
+                }else if("欧元".equals(str1)){
+                    bun.putFloat("euro-rate", v);
+                }else if("韩国元".equals(str1)){
+                    bun.putFloat("won-rate", v);
+                }
+            }
+            Message msg = handler.obtainMessage(5);
+            msg.obj = bun;
+            handler.sendMessage(msg);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     private String inputStream2String(InputStream inputStream) throws IOException {
             final int bufferSize = 1024;
             final char[] buffer = new char[bufferSize];

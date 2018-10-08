@@ -18,7 +18,6 @@ import org.jsoup.select.Elements;
 
 
 import java.io.*;
-import java.net.*;
 
 import org.jsoup.*;
 import java.text.SimpleDateFormat;
@@ -83,7 +82,7 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
                     editor.putFloat("euro_rate",euroRate);
                     editor.putFloat("won_rate",wonRate);
                     editor.putString("update_date",todayStr);
-                    editor.commit();
+                    editor.apply();
 
                 }
                 super.handleMessage(msg);
@@ -153,11 +152,10 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
         super.onActivityResult(requestCode, resultCode, data);
     }
     public void run() {
-
         Bundle bun = new Bundle();
         Document doc = null;
         try {
-            String url = "https://www.usd-cny.com/bankofchina.htm";
+            String url = "http://www.usd-cny.com/bankofchina.htm";
             doc = Jsoup.connect(url).get();
             Elements tables = doc.getElementsByTag("table");
             Element table1 = tables.get(0);
@@ -181,7 +179,6 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
             Message msg = handler.obtainMessage(5);
             msg.obj = bun;
             handler.sendMessage(msg);
-
         } catch (IOException e) {
             e.printStackTrace();
         }

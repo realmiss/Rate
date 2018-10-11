@@ -29,6 +29,8 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
     private float dollarRate = 0.1f;
     private float euroRate = 0.2f;
     private float wonRate = 0.3f;
+    private String lastStr = "0000-00-00";
+    private String todayStr = "0000-00-00";
     EditText rmb;
     TextView show;
     Handler handler;
@@ -46,49 +48,51 @@ public class RateActivity extends AppCompatActivity implements View.OnClickListe
         Button btn3 = (Button) findViewById(R.id.won);
         btn3.setOnClickListener(this);
 
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+        Date curDate = new Date(System.currentTimeMillis());
+        todayStr = sf.format(curDate);
+
         SharedPreferences sharedPreferences = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
         PreferenceManager.getDefaultSharedPreferences(this);
-        dollarRate = sharedPreferences.getFloat("dollar_rate",0.1f);
-        euroRate = sharedPreferences.getFloat("euro_rate",0.1f);
-        wonRate = sharedPreferences.getFloat("won_rate",0.1f);
+        dollarRate = sharedPreferences.getFloat("dollar_rate",0.01f);
+        euroRate = sharedPreferences.getFloat("euro_rate",0.01f);
+        wonRate = sharedPreferences.getFloat("won_rate",0.01f);
+        lastStr = sharedPreferences.getString("update_date","0000-00-00");
 
         Log.i(TAG, "onCreate: sp dollarRate=" + dollarRate);
         Log.i(TAG, "onCreate: sp euroRate=" + euroRate);
         Log.i(TAG, "onCreate: sp wonRate=" + wonRate);
+        Log.i(TAG, "onCreate: sp lastDate=" + lastStr);
+        Log.i(TAG, "onCreate: sp todayDate=" + todayStr);
 
-        Thread t = new Thread(this);
-        t.start();
+        //if(!todayStr.equals(lastStr)){
+            Thread t = new Thread(this);
+            t.start();
+            handler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    if(msg.what==5){
+                        Bundle bdl = (Bundle) msg.obj;
+                        dollarRate = bdl.getFloat("dollar-rate");
+                        euroRate = bdl.getFloat("euro-rate");
+                        wonRate = bdl.getFloat("won-rate");
+                        Log.i(TAG, "handleMessage: dollarRate:" + dollarRate);
+                        Log.i(TAG, "handleMessage: euroRate:" + euroRate);
+                        Log.i(TAG, "handleMessage: wonRate:" + wonRate);
+                        Toast.makeText(RateActivity.this, "汇率已更新", Toast.LENGTH_SHORT).show();
 
-        handler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                if(msg.what==5){
-                    Bundle bdl = (Bundle) msg.obj;
-                    dollarRate = bdl.getFloat("dollar-rate");
-                    euroRate = bdl.getFloat("euro-rate");
-                    wonRate = bdl.getFloat("won-rate");
-                    Log.i(TAG, "handleMessage: dollarRate:" + dollarRate);
-                    Log.i(TAG, "handleMessage: euroRate:" + euroRate);
-                    Log.i(TAG, "handleMessage: wonRate:" + wonRate);
-                    Toast.makeText(RateActivity.this, "汇率已更新", Toast.LENGTH_SHORT).show();
-
-                    SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
-                    Date curDate = new Date(System.currentTimeMillis());
-                    String todayStr = sf.format(curDate);
-
-                    SharedPreferences sp = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sp.edit();
-                    editor.putFloat("dollar_rate",dollarRate);
-                    editor.putFloat("euro_rate",euroRate);
-                    editor.putFloat("won_rate",wonRate);
-                    editor.putString("update_date",todayStr);
-                    editor.apply();
-
+                        SharedPreferences sp = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sp.edit();
+                        editor.putFloat("dollar_rate",dollarRate);
+                        editor.putFloat("euro_rate",euroRate);
+                        editor.putFloat("won_rate",wonRate);
+                        editor.putString("update_date",todayStr);
+                        editor.apply();
+                    }
+                    super.handleMessage(msg);
                 }
-                super.handleMessage(msg);
-            }
-        };
-
+            };
+       // }
     }
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.rate,menu);

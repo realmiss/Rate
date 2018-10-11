@@ -1,5 +1,13 @@
 <resources>
     <string name="app_name">APP</string>
+    <string name="teamA">Team A</string>
+    <string name="teamB">Team B</string>
+    <string name="zero">0</string>
+    <string name="app_name3">Court Counter</string>
+    <string name="add3points">+3 POINTS</string>
+    <string name="add2points">+2 POINTS</string>
+    <string name="add1point">FREE THROW</string>
+    <string name="reset">RESET</string>
     <string name="app_name1">汇率转换</string>
     <string name="rmb_hint_label">请输入金额</string>
     <string name="btn_dollar_label">DOLLAR</string>

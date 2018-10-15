@@ -23,4 +23,6 @@
     <string name="h_hint">单位是米</string>
     <string name="w_hint">单位是千克</string>
     <string name="result">点击确定显示结果</string>
+    <string name="itemTitle">itemTitle</string>
+    <string name="itemDetail">itemDetail</string>
 </resources>

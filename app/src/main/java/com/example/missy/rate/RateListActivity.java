@@ -5,7 +5,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.ListAdapter;
+import android.widget.ListView;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -42,6 +44,7 @@ public class RateListActivity extends ListActivity implements Runnable{
             }
         };
     }
+
 
     @Override
     public void run() {

@@ -20,7 +20,7 @@ import java.util.List;
 
 public class MyList2Activity extends ListActivity implements Runnable{
     Handler handler;
-    private ArrayList<HashMap<String, String>> listItems; // 存放文字、
+    private ArrayList<HashMap<String, String>> listItems;
     MyAdapter myAdapter;
     private int msgWhat = 7;
 
